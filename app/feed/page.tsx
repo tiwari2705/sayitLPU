@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, Suspense } from "react" // Added Suspense here
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -22,7 +22,8 @@ interface Confession {
   createdAt: string
 }
 
-export default function FeedPage() {
+// 1. Renamed your original component to FeedContent and removed 'export default'
+function FeedContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -207,28 +208,20 @@ export default function FeedPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Post Input */}
-
-
-
-            {/* <div className="mb-6">
-              <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-center gap-3">
-                <Input
-                  type="text"
+            <div className="mb-6">
+              <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-start gap-3">
+                <textarea
+                  ref={confessionTextareaRef}
                   placeholder="Post a Confession"
                   value={confessionText}
-                  onChange={(e) => setConfessionText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handlePostConfession()
-                    }
-                  }}
-                  className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600"
+                  onChange={handleConfessionChange}
+                  className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 rounded-md p-3 min-h-[50px] resize-none focus:outline-none text-sm"
+                  style={{ maxHeight: "120px" }}
                 />
                 <Button
                   onClick={handlePostConfession}
                   disabled={isPosting || !confessionText.trim()}
-                  className="bg-white text-black hover:bg-gray-200"
+                  className="bg-white text-black hover:bg-gray-200 mt-1"
                 >
                   {isPosting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -237,34 +230,7 @@ export default function FeedPage() {
                   )}
                 </Button>
               </div>
-            </div> */}
-
-
-            {/* Post Input */}
-<div className="mb-6">
-  <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-start gap-3"> {/* Changed items-center to items-start for better alignment */}
-    <textarea
-      ref={confessionTextareaRef}
-      placeholder="Post a Confession"
-      value={confessionText}
-      onChange={handleConfessionChange}
-      // Default Enter = newline; auto-resize up to ~5 lines then scroll
-      className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 rounded-md p-3 min-h-[50px] resize-none focus:outline-none text-sm"
-      style={{ maxHeight: "120px" }}
-    />
-    <Button
-      onClick={handlePostConfession}
-      disabled={isPosting || !confessionText.trim()}
-      className="bg-white text-black hover:bg-gray-200 mt-1" // Added mt-1 to align with the top of the textarea
-    >
-      {isPosting ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <ArrowRight className="h-4 w-4" />
-      )}
-    </Button>
-  </div>
-</div>
+            </div>
 
             {/* Sort Buttons */}
             <div className="mb-6 flex gap-3">
@@ -305,7 +271,6 @@ export default function FeedPage() {
                   <Card key={confession.id} className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
                     
                     {/* --- TOP SECTION (2/3 WEIGHT) --- */}
-                    {/* Content area that grows to fill space, minimal padding at bottom */}
                     <div className="p-6 pb-4 flex-1">
                         <div className="flex justify-end mb-3">
                             <span className="text-xs text-gray-400 font-medium flex items-center bg-gray-950/50 px-3 py-1.5 rounded-full border border-gray-800">
@@ -331,7 +296,6 @@ export default function FeedPage() {
                     </div>
 
                     {/* --- BOTTOM SECTION (1/3 WEIGHT) --- */}
-                    {/* Distinct footer with background color change and larger padding to simulate 1/3 weight */}
                     <div className="bg-gray-800/30 p-5 border-t border-gray-800 mt-auto">
                         <div className="flex items-center justify-between px-2">
                             <div className="flex gap-6">
@@ -375,5 +339,18 @@ export default function FeedPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 2. Added this new default export wrapper
+export default function FeedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    }>
+      <FeedContent />
+    </Suspense>
   )
 }
