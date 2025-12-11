@@ -33,6 +33,10 @@
   }
   body {
     @apply bg-black text-white;
+    
+    /* This creates the 90% zoom effect */
+    zoom: 0.9; 
+    
     background-image: 
       radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -43,4 +47,3 @@
     background-position: 0 0, 50px 50px, 100px 100px, 150px 150px, 200px 200px;
   }
 }
-
