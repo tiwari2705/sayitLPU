@@ -28,6 +28,7 @@
     "@uploadthing/react": "^7.3.3",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
+    "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.427.0",
