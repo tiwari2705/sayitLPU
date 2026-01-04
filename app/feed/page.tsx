@@ -356,13 +356,13 @@ function FeedContent() {
 
                         </div>
 
-                        {session?.user?.role === "ADMIN" && (
+                        {/* {session?.user?.role === "ADMIN" && (
                           <div className="flex items-center gap-3">
                             <Button onClick={() => handleDownloadReel(confession)} className="bg-white text-black hover:bg-gray-200">
                                Download Reel
                             </Button>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
 
