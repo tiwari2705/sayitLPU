@@ -28,12 +28,12 @@ export function Sidebar() {
                     <p className="text-xs text-gray-400">Member</p>
                   </div>
                </div>
-               <Link href="/profile">
+               {/* <Link href="/profile">
                  <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-700">
                    <User className="w-4 h-4 mr-2"/>
                    My Profile
                  </Button>
-               </Link>
+               </Link> */}
             </div>
           ) : (
             // GUEST VIEW

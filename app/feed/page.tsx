@@ -219,27 +219,27 @@ function FeedContent() {
     })
   }
 
-  // --- DOWNLOAD LOGIC ---
-  const handleDownloadReel = async (conf: Confession) => {
-    const element = reelRef.current[conf.id]
-    if (!element) {
-      toast({ title: "Error", description: "Reel element not found", variant: "destructive" })
-      return
-    }
+  // // --- DOWNLOAD LOGIC ---
+  // const handleDownloadReel = async (conf: Confession) => {
+  //   const element = reelRef.current[conf.id]
+  //   if (!element) {
+  //     toast({ title: "Error", description: "Reel element not found", variant: "destructive" })
+  //     return
+  //   }
 
-    try {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      const canvas = await html2canvas(element, { useCORS: true, scale: 2, backgroundColor: null })
-      const dataUrl = canvas.toDataURL("image/png")
-      const link = document.createElement("a")
-      link.href = dataUrl
-      link.download = `sayitLPU-post-${conf.id}.png`
-      link.click()
-    } catch (err) {
-      console.error("Failed to capture reel:", err)
-      toast({ title: "Error", description: "Failed to generate image.", variant: "destructive" })
-    }
-  }
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 100))
+  //     const canvas = await html2canvas(element, { useCORS: true, scale: 2, backgroundColor: null })
+  //     const dataUrl = canvas.toDataURL("image/png")
+  //     const link = document.createElement("a")
+  //     link.href = dataUrl
+  //     link.download = `sayitLPU-post-${conf.id}.png`
+  //     link.click()
+  //   } catch (err) {
+  //     console.error("Failed to capture reel:", err)
+  //     toast({ title: "Error", description: "Failed to generate image.", variant: "destructive" })
+  //   }
+  // }
 
   const getDynamicTextClass = (text: string) => {
     const len = text.length
@@ -400,11 +400,11 @@ function FeedContent() {
                       </div>
                     </div> */}
                     {/* Hidden Reel Generator */}
-                    <div 
+                    {/* <div 
                       ref={(el) => { reelRef.current[confession.id] = el }} // <--- CHANGED: Added { } braces
                       className={styles.hiddenReel}
                       aria-hidden
-                    ></div>
+                    ></div> */}
 
                   </Card>
                 ))
