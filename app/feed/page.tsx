@@ -367,7 +367,7 @@ function FeedContent() {
                     </div>
 
                     {/* Hidden Reel Generator */}
-                    <div ref={(el) => { reelRef.current[confession.id] = el; }} className={styles.reelContainer} aria-hidden>
+                    {/* <div ref={(el) => { reelRef.current[confession.id] = el; }} className={styles.reelContainer} aria-hidden>
                        <div className={styles.reelHeader}>
                         <div className={styles.reelLogo}>
                            <div className={styles.reelLogoText}>LPU</div>
@@ -398,7 +398,13 @@ function FeedContent() {
                            <div className={styles.reelWebsiteName}>sayitLPU.com</div>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
+                    {/* Hidden Reel Generator */}
+                    <div 
+                      ref={(el) => { reelRef.current[confession.id] = el }} // <--- CHANGED: Added { } braces
+                      className={styles.hiddenReel}
+                      aria-hidden
+                    ></div>
 
                   </Card>
                 ))
