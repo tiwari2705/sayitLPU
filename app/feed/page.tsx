@@ -10,6 +10,7 @@ import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Sidebar } from "@/components/sidebar"
 import html2canvas from "html2canvas"
+import styles from "./feed.module.css"
 
 interface Confession {
   id: string
@@ -240,12 +241,12 @@ function FeedContent() {
     }
   }
 
-  const getDynamicTextStyle = (text: string) => {
+  const getDynamicTextClass = (text: string) => {
     const len = text.length
-    if (len < 50) return { fontSize: 80, lineHeight: 1.3 }
-    if (len < 150) return { fontSize: 60, lineHeight: 1.4 }
-    if (len < 300) return { fontSize: 48, lineHeight: 1.4 }
-    return { fontSize: 36, lineHeight: 1.5 }
+    if (len < 50) return "text-[80px] leading-[1.3]"
+    if (len < 150) return "text-[60px] leading-[1.4]"
+    if (len < 300) return "text-[48px] leading-[1.4]"
+    return "text-[36px] leading-[1.5]"
   }
 
   if (status === "loading" && isLoading) {
@@ -273,7 +274,6 @@ function FeedContent() {
                   onChange={handleConfessionChange}
                   onFocus={handleInputFocus} 
                   className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 rounded-md p-3 min-h-[50px] resize-none focus:outline-none text-sm"
-                  style={{ maxHeight: "120px" }}
                 />
                 <Button
                   onClick={handlePostConfession}
@@ -367,35 +367,35 @@ function FeedContent() {
                     </div>
 
                     {/* Hidden Reel Generator */}
-                    <div ref={(el) => (reelRef.current[confession.id] = el)} style={{ position: "fixed", left: -20000, top: -20000, width: 1080, height: 1920, zIndex: 9999, background: "linear-gradient(160deg, #1e293b 0%, #0f172a 40%, #000000 100%)", color: "#ffffff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", justifyContent: "space-between" }} aria-hidden>
-                       <div style={{ padding: "80px 60px 0 60px", display: "flex", alignItems: "center", gap: 20 }}>
-                        <div style={{ width: 100, height: 100, background: "#fff", borderRadius: "20px", display: "flex", alignItems:"center", justifyContent:"center", overflow: "hidden" }}>
-                           <div style={{ fontSize: 50, color: "#000", fontWeight: "bold" }}>LPU</div>
+                    <div ref={(el) => { reelRef.current[confession.id] = el; }} className={styles.reelContainer} aria-hidden>
+                       <div className={styles.reelHeader}>
+                        <div className={styles.reelLogo}>
+                           <div className={styles.reelLogoText}>LPU</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: "-1px" }}>sayitLPU</div>
-                          <div style={{ fontSize: 28, color: "rgba(255,255,255,0.6)" }}>Anonymous Confessions</div>
+                          <div className={styles.reelTitle}>sayitLPU</div>
+                          <div className={styles.reelSubtitle}>Anonymous Confessions</div>
                         </div>
                       </div>
-                      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "60px", position: "relative" }}>
-                        <div style={{ position: "absolute", top: "15%", left: "10%", opacity: 0.05, transform: "scale(10)" }}><Quote size={60} fill="white" /></div>
-                        <div style={{ width: "100%", backgroundColor: "rgba(255, 255, 255, 0.03)", backdropFilter: "blur(10px)", border: "2px solid rgba(255, 255, 255, 0.1)", borderRadius: "40px", padding: "80px 60px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}>
-                          <div style={{ width: "100%", ...getDynamicTextStyle(confession.text), fontWeight: 600, whiteSpace: "pre-wrap", wordBreak: "break-word", textAlign: confession.text.length > 200 ? "left" : "center", color: "#fff", textShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>{confession.text}</div>
+                      <div className={styles.reelContent}>
+                        <div className={styles.reelQuoteIcon}><Quote size={60} fill="white" /></div>
+                        <div className={styles.reelTextBox}>
+                          <div className={`${styles.reelText} ${confession.text.length > 200 ? "text-left" : "text-center"} ${getDynamicTextClass(confession.text)}`}>{confession.text}</div>
                         </div>
                         {confession.image && (
-                          <div style={{ marginTop: "60px", width: "100%", height: "600px", borderRadius: "30px", overflow: "hidden", position: "relative", border: "2px solid rgba(255,255,255,0.1)", boxShadow: "0 20px 40px rgba(0,0,0,0.6)" }}>
-                            <img src={confession.image} alt="Confession visual" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> 
+                          <div className={styles.reelImageContainer}>
+                            <img src={confession.image} alt="Confession visual" className={styles.reelImage} /> 
                           </div>
                         )}
                       </div>
-                      <div style={{ padding: "0 60px 80px 60px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "40px", margin: "0 60px 60px 60px" }}>
+                      <div className={styles.reelFooter}>
                         <div>
-                           <div style={{ fontSize: 32, fontWeight: 600, color: "#fff" }}>{new Date(confession.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                           <div style={{ fontSize: 24, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>{new Date(confession.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                           <div className={styles.reelDate}>{new Date(confession.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                           <div className={styles.reelTime}>{new Date(confession.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ textAlign: "right" }}>
-                           <div style={{ fontSize: 24, color: "rgba(255,255,255,0.5)" }}>Download the app</div>
-                           <div style={{ fontSize: 32, fontWeight: "bold", color: "#3b82f6" }}>sayitLPU.com</div>
+                        <div className={styles.reelWebsite}>
+                           <div className={styles.reelWebsiteLabel}>Download the app</div>
+                           <div className={styles.reelWebsiteName}>sayitLPU.com</div>
                         </div>
                       </div>
                     </div>
