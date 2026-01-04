@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireAuth } from "@/lib/middleware"
+import { getServerSession } from "next-auth" // Use soft auth check
+import { authOptions } from "@/lib/auth"     // Verify this path matches your project
 import { prisma } from "@/lib/prisma"
 
 export async function GET(
@@ -7,8 +8,16 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { error, user } = await requireAuth()
-    if (error) return error
+    // 1. CHANGE: Soft Auth Check
+    // We try to get the session, but we don't return an error if it's missing.
+    const session = await getServerSession(authOptions)
+    const user = session?.user
+
+    // 2. CHANGE: Conditional Logic for "Did I like this?"
+    // If user is logged in, we check if they liked it. If guest, we skip that check.
+    const likesInclude = user 
+      ? { where: { userId: user.id }, select: { id: true } } 
+      : undefined
 
     const confession = await prisma.confession.findUnique({
       where: { id: params.id },
@@ -19,11 +28,8 @@ export async function GET(
             comments: true,
           },
         },
-        likes: {
-          where: {
-            userId: user!.id,
-          },
-        },
+        // Apply the conditional include
+        likes: likesInclude as any,
         comments: {
           orderBy: {
             createdAt: "asc",
@@ -40,14 +46,16 @@ export async function GET(
       )
     }
 
-    // Return anonymous data
+    // 3. CHANGE: Safe Mapping
+    // Return anonymous data, allowing guests to see comments
     return NextResponse.json({
       id: confession.id,
       text: confession.text,
       image: confession.image,
       likesCount: confession._count.likes,
       commentsCount: confession._count.comments,
-      isLiked: confession.likes.length > 0,
+      // If 'likes' array exists (logged in user), check length. If undefined (guest), return false.
+      isLiked: confession.likes ? confession.likes.length > 0 : false,
       comments: confession.comments.map((comment) => ({
         id: comment.id,
         text: comment.text,
@@ -63,4 +71,3 @@ export async function GET(
     )
   }
 }
-

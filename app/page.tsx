@@ -1,14 +1,9 @@
 import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 
-export default async function Home() {
-  const session = await getServerSession(authOptions)
+// We no longer need to check the session here because 
+// the Feed page now handles both Guests and Users.
 
-  if (!session) {
-    redirect("/login")
-  }
-
+export default function Home() {
+  // Instantly redirect everyone to the Feed
   redirect("/feed")
 }
-

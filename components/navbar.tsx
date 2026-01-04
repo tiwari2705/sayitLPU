@@ -15,7 +15,8 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
-    router.push("/login")
+    // CHANGE: Redirect to feed (guest view) instead of login page
+    router.push("/feed") 
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -70,6 +71,7 @@ export function Navbar() {
               </Button>
             </>
           ) : (
+            // Guest View: Show Login Button
             <Link href="/login">
               <Button className="bg-white text-black hover:bg-gray-200">
                 Login
@@ -81,4 +83,3 @@ export function Navbar() {
     </nav>
   )
 }
-

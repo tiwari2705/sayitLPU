@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
 import { Heart, MessageCircle, Flag, Loader2, Send } from "lucide-react"
+import html2canvas from "html2canvas";
+
 
 interface Comment {
   id: string
