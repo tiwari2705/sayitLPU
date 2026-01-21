@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function main() {
   console.log("Seeding database...")
 
-  const adminEmail = "admin@lpuconfess.com"
+  const adminEmail = "admin@sayitlpu.com"
   const adminPassword = await bcrypt.hash("admin123", 10)
 
   const admin = await prisma.user.upsert({
