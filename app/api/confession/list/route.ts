@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
     // Instead of requireAuth which blocks execution, we just ask "is there a session?"
     const session = await getServerSession(authOptions)
     const user = session?.user
+    const isAdmin = user?.role === "ADMIN"
 
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get("page") || "1")
@@ -23,6 +24,9 @@ export async function GET(req: NextRequest) {
     // Build where clause
     const where: any = {
       isRemoved: false,
+    }
+    if (!isAdmin) {
+      where.isHidden = false
     }
 
     if (search) {
@@ -42,18 +46,22 @@ export async function GET(req: NextRequest) {
       ? { where: { userId: user.id }, select: { id: true } } 
       : undefined // If guest, do not try to fetch likes specific to a user
 
+    const include: any = {
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
+      likes: likesInclude as any,
+    }
+    if (isAdmin) {
+      include.author = { select: { id: true, email: true } }
+    }
+
     const confessions = await prisma.confession.findMany({
       where,
-      include: {
-        _count: {
-          select: {
-            likes: true,
-            comments: true,
-          },
-        },
-        // Apply the conditional include here
-        likes: likesInclude as any, 
-      },
+      include,
       orderBy: orderBy || { createdAt: "desc" as const },
       skip: sort === "trending" ? 0 : skip,
       take: sort === "trending" ? 100 : limit,
@@ -75,17 +83,27 @@ export async function GET(req: NextRequest) {
 
     // 3. CHANGE: Safe Mapping for isLiked
     // We check if 'confession.likes' exists before checking length (it will be undefined for guests)
-    const anonymousConfessions = sortedConfessions.map((confession) => ({
-      id: confession.id,
-      text: confession.text,
-      image: confession.image,
-      likesCount: confession._count.likes,
-      commentsCount: confession._count.comments,
-      // If user is guest, 'likes' array is undefined, so isLiked becomes false.
-      // If user is logged in, 'likes' array exists and we check if it has items.
-      isLiked: confession.likes ? confession.likes.length > 0 : false,
-      createdAt: confession.createdAt,
-    }))
+    const anonymousConfessions = sortedConfessions.map((confession: any) => {
+      const base = {
+        id: confession.id,
+        text: confession.text,
+        image: confession.image,
+        likesCount: confession._count.likes,
+        commentsCount: confession._count.comments,
+        // If user is guest, 'likes' array is undefined, so isLiked becomes false.
+        // If user is logged in, 'likes' array exists and we check if it has items.
+        isLiked: confession.likes ? confession.likes.length > 0 : false,
+        createdAt: confession.createdAt,
+      }
+
+      if (!isAdmin) return base
+
+      return {
+        ...base,
+        isHidden: confession.isHidden,
+        author: confession.author ? { id: confession.author.id, email: confession.author.email } : null,
+      }
+    })
 
     return NextResponse.json({
       confessions: anonymousConfessions,

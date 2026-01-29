@@ -62,7 +62,7 @@ export default function PendingPage() {
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-white" />
               <p className="text-sm text-gray-400">
-                We'll notify you once your account is approved.
+                We&apos;ll notify you once your account is approved.
               </p>
             </div>
           )}

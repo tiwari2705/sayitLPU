@@ -12,6 +12,7 @@ export async function GET(
     // We try to get the session, but we don't return an error if it's missing.
     const session = await getServerSession(authOptions)
     const user = session?.user
+    const isAdmin = user?.role === "ADMIN"
 
     // 2. CHANGE: Conditional Logic for "Did I like this?"
     // If user is logged in, we check if they liked it. If guest, we skip that check.
@@ -40,6 +41,12 @@ export async function GET(
     })
 
     if (!confession || confession.isRemoved) {
+      return NextResponse.json(
+        { error: "Confession not found" },
+        { status: 404 }
+      )
+    }
+    if (confession.isHidden && !isAdmin) {
       return NextResponse.json(
         { error: "Confession not found" },
         { status: 404 }

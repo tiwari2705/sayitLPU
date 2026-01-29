@@ -42,7 +42,7 @@ export function Sidebar() {
                  Join the Community
               </h2>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                 Login to post anonymous confessions, like posts, and comment on others' secrets.
+                 Login to post anonymous confessions, like posts, and comment on others&apos; secrets.
               </p>
               <Link href="/login">
                 <Button className="w-full bg-white text-black hover:bg-gray-200">
@@ -60,7 +60,7 @@ export function Sidebar() {
             Why Confess?
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed">
-            Confess your deepest, darkest secrets without worrying about anyone finding out your true ego. Be honest to strangers, we're all here to revel in our questionable life choices.
+            Confess your deepest, darkest secrets without worrying about anyone finding out your true ego. Be honest to strangers, we&apos;re all here to revel in our questionable life choices.
           </p>
         </div>
 

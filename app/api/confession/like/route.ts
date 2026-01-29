@@ -26,6 +26,12 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       )
     }
+    if (confession.isHidden && user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Confession not found" },
+        { status: 404 }
+      )
+    }
 
     // Check if already liked
     const existingLike = await prisma.like.findUnique({

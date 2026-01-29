@@ -48,6 +48,7 @@ model Confession {
   image     String?
   authorId  String
   isRemoved Boolean  @default(false)
+  isHidden  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

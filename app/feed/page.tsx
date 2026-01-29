@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Heart, MessageCircle, Flame, Clock, ArrowRight, Loader2, Calendar, Quote } from "lucide-react"
+import { Heart, MessageCircle, Flame, Clock, ArrowRight, Loader2, Calendar, Quote, Eye, EyeOff } from "lucide-react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Sidebar } from "@/components/sidebar"
@@ -20,6 +20,35 @@ interface Confession {
   commentsCount: number
   isLiked?: boolean
   createdAt: string
+  isHidden?: boolean
+  author?: { id: string; email: string } | null
+}
+
+function ConfessionSkeletonCard() {
+  return (
+    <Card className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
+      <div className="p-6 pb-4 flex-1">
+        <div className="flex justify-end mb-3">
+          <div className="h-7 w-40 rounded-full bg-gray-800 animate-pulse" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-4 w-full rounded bg-gray-800 animate-pulse" />
+          <div className="h-4 w-11/12 rounded bg-gray-800 animate-pulse" />
+          <div className="h-4 w-9/12 rounded bg-gray-800 animate-pulse" />
+        </div>
+        <div className="mt-6 h-64 w-full rounded-lg bg-gray-800 animate-pulse" />
+      </div>
+      <div className="bg-gray-800/30 p-5 border-t border-gray-800 mt-auto">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex gap-6">
+            <div className="h-10 w-28 rounded-full bg-gray-800 animate-pulse" />
+            <div className="h-10 w-36 rounded-full bg-gray-800 animate-pulse" />
+          </div>
+          <div className="h-10 w-24 rounded-full bg-gray-800 animate-pulse" />
+        </div>
+      </div>
+    </Card>
+  )
 }
 
 function FeedContent() {
@@ -32,6 +61,7 @@ function FeedContent() {
   const [confessionText, setConfessionText] = useState("")
   const [isPosting, setIsPosting] = useState(false)
   const [sortBy, setSortBy] = useState<"newest" | "trending">("newest")
+  const [togglingHidden, setTogglingHidden] = useState<Set<string>>(new Set())
   const { toast } = useToast()
   const confessionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
   const reelRef = useRef<{ [key: string]: HTMLDivElement | null }>({})
@@ -85,6 +115,7 @@ function FeedContent() {
 
   const fetchConfessions = async (search?: string) => {
     try {
+      setIsLoading(true)
       const searchParam = search || searchParams.get("search") || ""
       const url = `/api/confession/list?page=1&limit=20&sort=${sortBy}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ""}`
       const res = await fetch(url)
@@ -120,6 +151,55 @@ function FeedContent() {
       console.error("Error fetching confessions:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleToggleHidden = async (confessionId: string, nextHidden: boolean) => {
+    if (session?.user?.role !== "ADMIN") return
+
+    setTogglingHidden((prev) => {
+      const next = new Set(prev)
+      next.add(confessionId)
+      return next
+    })
+
+    try {
+      const res = await fetch("/api/admin/toggleHideConfession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confessionId, isHidden: nextHidden }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to update post visibility",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setConfessions((prev) =>
+        prev.map((c) => (c.id === confessionId ? { ...c, isHidden: data.isHidden } : c))
+      )
+
+      toast({
+        title: "Success",
+        description: data.isHidden ? "Post hidden" : "Post unhidden",
+      })
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to update post visibility",
+        variant: "destructive",
+      })
+    } finally {
+      setTogglingHidden((prev) => {
+        const next = new Set(prev)
+        next.delete(confessionId)
+        return next
+      })
     }
   }
 
@@ -249,14 +329,6 @@ function FeedContent() {
     return "text-[36px] leading-[1.5]"
   }
 
-  if (status === "loading" && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-black">
       <div className="container mx-auto px-4 py-8">
@@ -305,7 +377,9 @@ function FeedContent() {
 
             {/* Confessions Feed */}
             <div className="space-y-6">
-              {confessions.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, idx) => <ConfessionSkeletonCard key={idx} />)
+              ) : confessions.length === 0 ? (
                 <Card className="bg-gray-900 border-gray-800 py-12 text-center text-gray-400">
                   <p>No confessions yet. Be the first to confess!</p>
                 </Card>
@@ -314,12 +388,25 @@ function FeedContent() {
                   <Card key={confession.id} className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
                     <div className="p-6 pb-4 flex-1">
                       <div className="flex justify-end mb-3">
-                        <span className="text-xs text-gray-400 font-medium flex items-center bg-gray-950/50 px-3 py-1.5 rounded-full border border-gray-800">
-                          <Calendar className="w-3 h-3 mr-2" />
-                          {formatDateTime(confession.createdAt)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {session?.user?.role === "ADMIN" && confession.isHidden && (
+                            <span className="text-xs text-yellow-200 font-medium bg-yellow-500/10 px-3 py-1.5 rounded-full border border-yellow-500/30">
+                              Hidden
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400 font-medium flex items-center bg-gray-950/50 px-3 py-1.5 rounded-full border border-gray-800">
+                            <Calendar className="w-3 h-3 mr-2" />
+                            {formatDateTime(confession.createdAt)}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-white whitespace-pre-wrap text-lg leading-relaxed mb-4">{confession.text}</p>
+                      {session?.user?.role === "ADMIN" && (
+                        <div className="mb-3 text-xs text-gray-400">
+                          Posted by:{" "}
+                          <span className="text-gray-200">{confession.author?.email || "Unknown"}</span>
+                        </div>
+                      )}
+                      <p className={`text-white whitespace-pre-wrap text-lg leading-relaxed mb-4 ${session?.user?.role === "ADMIN" && confession.isHidden ? "opacity-60" : ""}`}>{confession.text}</p>
                       {confession.image && (
                         <div className="relative w-full h-72 rounded-lg overflow-hidden mt-4">
                           <Image src={confession.image} alt="Confession image" fill className="object-cover" />
@@ -363,6 +450,26 @@ function FeedContent() {
                             </Button>
                           </div>
                         )} */}
+                        {session?.user?.role === "ADMIN" && (
+                          <Button
+                            variant="outline"
+                            disabled={togglingHidden.has(confession.id)}
+                            onClick={() => handleToggleHidden(confession.id, !confession.isHidden)}
+                            className="border-gray-800 text-white hover:bg-gray-900"
+                          >
+                            {togglingHidden.has(confession.id) ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : confession.isHidden ? (
+                              <>
+                                <Eye className="h-4 w-4 mr-2" /> Unhide
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="h-4 w-4 mr-2" /> Hide
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
 

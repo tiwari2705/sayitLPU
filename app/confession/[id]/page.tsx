@@ -30,6 +30,47 @@ interface Confession {
   createdAt: string
 }
 
+function ConfessionDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-black">
+      <div className="container mx-auto py-8 max-w-3xl px-4 space-y-6">
+        <Card className="bg-gray-900 border-gray-800">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="h-4 w-32 rounded bg-gray-800 animate-pulse" />
+              <div className="space-y-3">
+                <div className="h-4 w-full rounded bg-gray-800 animate-pulse" />
+                <div className="h-4 w-11/12 rounded bg-gray-800 animate-pulse" />
+                <div className="h-4 w-8/12 rounded bg-gray-800 animate-pulse" />
+              </div>
+              <div className="h-96 w-full rounded-lg bg-gray-800 animate-pulse" />
+              <div className="flex items-center space-x-4 pt-2 border-t border-gray-800">
+                <div className="h-9 w-20 rounded bg-gray-800 animate-pulse" />
+                <div className="h-9 w-24 rounded bg-gray-800 animate-pulse" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-900 border-gray-800">
+          <CardContent className="p-6">
+            <div className="h-5 w-40 rounded bg-gray-800 animate-pulse mb-6" />
+            <div className="flex space-x-2 mb-6">
+              <div className="h-16 flex-1 rounded bg-gray-800 animate-pulse" />
+              <div className="h-10 w-10 rounded bg-gray-800 animate-pulse" />
+            </div>
+            <div className="space-y-4">
+              <div className="h-14 w-full rounded bg-gray-800 animate-pulse" />
+              <div className="h-14 w-full rounded bg-gray-800 animate-pulse" />
+              <div className="h-14 w-full rounded bg-gray-800 animate-pulse" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 export default function ConfessionDetailPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -196,11 +237,7 @@ export default function ConfessionDetailPage() {
   }
 
   if (status === "loading" || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
-      </div>
-    )
+    return <ConfessionDetailSkeleton />
   }
 
   if (!confession) {
