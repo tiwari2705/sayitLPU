@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth" // Use standard NextAuth to check session softly
-import { authOptions } from "@/lib/auth"     // <--- VERIFY THIS PATH (it's where your NextAuth options are)
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
-    // 1. CHANGE: Soft Auth Check (Optional Session)
-    // Instead of requireAuth which blocks execution, we just ask "is there a session?"
+    // Optional session (guest allowed)
     const session = await getServerSession(authOptions)
     const user = session?.user
     const isAdmin = user?.role === "ADMIN"
@@ -19,12 +18,20 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20")
     const skip = (page - 1) * limit
     const search = searchParams.get("search") || ""
-    const sort = searchParams.get("sort") || "newest" 
+    const sort = searchParams.get("sort") || "newest"
 
-    // Build where clause
-    const where: any = {
+    // WHERE clause
+    const where: {
+      isRemoved: boolean
+      isHidden?: boolean
+      text?: {
+        contains: string
+        mode: "insensitive"
+      }
+    } = {
       isRemoved: false,
     }
+
     if (!isAdmin) {
       where.isHidden = false
     }
@@ -36,62 +43,57 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const orderBy = sort === "newest" 
-      ? { createdAt: "desc" as const }
-      : undefined
-
-    // 2. CHANGE: Conditional "Likes" Include
-    // Only try to fetch specific user likes if we actually have a user ID.
-    const likesInclude = user 
-      ? { where: { userId: user.id }, select: { id: true } } 
-      : undefined // If guest, do not try to fetch likes specific to a user
-
-    const include: any = {
+    // Prisma include (🔥 FIXED)
+    const include = {
       _count: {
         select: {
           likes: true,
           comments: true,
         },
       },
-      likes: likesInclude as any,
-    }
-    if (isAdmin) {
-      include.author = { select: { id: true, email: true } }
+      likes: user
+        ? { where: { userId: user.id }, select: { id: true } }
+        : false,
+      ...(isAdmin && {
+        author: { select: { id: true, email: true } },
+      }),
     }
 
     const confessions = await prisma.confession.findMany({
       where,
       include,
-      orderBy: orderBy || { createdAt: "desc" as const },
+      orderBy: sort === "newest" ? { createdAt: "desc" } : undefined,
       skip: sort === "trending" ? 0 : skip,
       take: sort === "trending" ? 100 : limit,
     })
 
-    // Sort logic (unchanged)
+    // Trending sort
     let sortedConfessions = confessions
     if (sort === "trending") {
-      sortedConfessions = confessions.sort((a, b) => {
-        const aEngagement = a._count.likes + a._count.comments
-        const bEngagement = b._count.likes + b._count.comments
-        if (aEngagement === bEngagement) {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        }
-        return bEngagement - aEngagement
-      })
-      sortedConfessions = sortedConfessions.slice(skip, skip + limit)
+      sortedConfessions = [...confessions]
+        .sort((a, b) => {
+          const aEngagement = a._count.likes + a._count.comments
+          const bEngagement = b._count.likes + b._count.comments
+
+          if (aEngagement === bEngagement) {
+            return (
+              new Date(b.createdAt).getTime() -
+              new Date(a.createdAt).getTime()
+            )
+          }
+          return bEngagement - aEngagement
+        })
+        .slice(skip, skip + limit)
     }
 
-    // 3. CHANGE: Safe Mapping for isLiked
-    // We check if 'confession.likes' exists before checking length (it will be undefined for guests)
-    const anonymousConfessions = sortedConfessions.map((confession: any) => {
+    // Response mapping
+    const response = sortedConfessions.map((confession) => {
       const base = {
         id: confession.id,
         text: confession.text,
         image: confession.image,
         likesCount: confession._count.likes,
         commentsCount: confession._count.comments,
-        // If user is guest, 'likes' array is undefined, so isLiked becomes false.
-        // If user is logged in, 'likes' array exists and we check if it has items.
         isLiked: confession.likes ? confession.likes.length > 0 : false,
         createdAt: confession.createdAt,
       }
@@ -101,12 +103,14 @@ export async function GET(req: NextRequest) {
       return {
         ...base,
         isHidden: confession.isHidden,
-        author: confession.author ? { id: confession.author.id, email: confession.author.email } : null,
+        author: confession.author
+          ? { id: confession.author.id, email: confession.author.email }
+          : null,
       }
     })
 
     return NextResponse.json({
-      confessions: anonymousConfessions,
+      confessions: response,
       page,
       limit,
     })
