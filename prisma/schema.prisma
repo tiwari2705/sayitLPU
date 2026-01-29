@@ -1,6 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+<<<<<<< HEAD
 generator client {
   provider = "prisma-client-js"
 }
@@ -99,3 +98,5 @@ model Report {
 
   @@map("reports")
 }
+=======
+>>>>>>> 2b3508ff2ed6cbdc877a0f1107c1e52aa4f58798

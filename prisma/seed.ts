@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
 
+<<<<<<< HEAD
 const prisma = new PrismaClient()
 
 async function main() {
@@ -52,3 +51,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect()
   })
+=======
+>>>>>>> 2b3508ff2ed6cbdc877a0f1107c1e52aa4f58798
